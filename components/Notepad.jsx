@@ -205,19 +205,25 @@ class Notepad extends React.Component {
         newCursorPos -= 2;
         dirty = true;
       }
+      // Checkbox list
+      if (previousLine.match(/- \[[ x]\] [|\w|\!]+/g)) {
+        lines.splice(currentLine, 0, "- [ ] ");
+        newCursorPos += 7;
+        dirty = true;
+      }
       // Un-ordered list
-      if (previousLine.match(/- [\[|\w|\!]+/g)) {
+      if (previousLine.match(/- [|\w|\!]+/g)) {
         lines.splice(currentLine, 0, "- ");
         newCursorPos += 3;
         dirty = true;
       }
       // Exit the bullet list
-      if (previousLine.match(/- $/g)) {
+      if (previousLine.match(/- (\[[ x]\] )?$/g)) {
         lines[currentLine - 1] = "";
         if (newCursorPos === textToSync.length) {
           lines.splice(currentLine, 0, "\n");
         }
-        newCursorPos -= 1;
+        newCursorPos -= previousLine.length;
         dirty = true;
       }
       if (dirty) {
