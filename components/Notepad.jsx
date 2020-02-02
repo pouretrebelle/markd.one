@@ -54,9 +54,7 @@ class Notepad extends React.Component {
       (match, all, link) => {
         let m = link.match(/\>(.*?)\</);
         if (m && m.length > 1) {
-          return `<a target="_blank" rel="noopener noreferrer" class="inline-url" href="${
-            m[1]
-          }">${all}</a>`;
+          return `<a target="_blank" rel="noopener noreferrer" class="inline-url" href="${m[1]}">${all}</a>`;
         } else return match;
       }
     );
@@ -106,18 +104,28 @@ class Notepad extends React.Component {
     const keyPressed = e.key;
 
     // Only execute when user press ENTER
-    textToSync = this.editAssistantHitReturn(keyPressed, element, e, textToSync);
+    textToSync = this.editAssistantHitReturn(
+      keyPressed,
+      element,
+      e,
+      textToSync
+    );
 
     // User pressed a left bracket (, [, or {
     // We'll insert a corresponding right bracket and move the cursor to the center
-    textToSync = this.editAssistantHitBracket(keyPressed, element, e, textToSync);
+    textToSync = this.editAssistantHitBracket(
+      keyPressed,
+      element,
+      e,
+      textToSync
+    );
 
     this.syncScroll(element);
 
     if (window.lastSave && window.localStorage) {
       let timeSinceLastSave = Date.now() - window.lastSave;
       if (timeSinceLastSave >= DB_SAVE_THRESHOLD) {
-        window.localStorage.setItem('note', element.value);
+        window.localStorage.setItem("note", element.value);
         window.lastSave = Date.now();
       }
     }
@@ -223,7 +231,9 @@ class Notepad extends React.Component {
       this.editor.focus();
       this.syncText(this.editor);
 
-      this.editor.value = window.localStorage && window.localStorage.getItem('note') || placeHolderContent;
+      this.editor.value =
+        (window.localStorage && window.localStorage.getItem("note")) ||
+        placeHolderContent;
       this.setState({ highlightedHTML: this.highlightCode(this.editor.value) });
 
       window.lastSave = Date.now();
