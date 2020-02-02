@@ -94,7 +94,9 @@
 }
 
 .marked-list {
-  color: $purple-color;
+  &:not(.checked) .button-checkbox {
+    color: $purple-color;
+  }
 
   &.checked {
     text-decoration: line-through;
@@ -131,6 +133,16 @@
   &.low {
     color: $background-color;
     @include highlight(2px, $yellow-color);
+  }
+}
+
+.button-checkbox {
+  pointer-events: auto;
+  user-select: none;
+  cursor: pointer;
+  &:hover {
+    $hover-bgcolor: rgba($comment-color, 0.2);
+    @include highlight(2px, $hover-bgcolor);
   }
 }
 

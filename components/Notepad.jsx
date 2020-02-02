@@ -42,12 +42,38 @@ class Notepad extends React.Component {
       user: false,
       needLogin: false
     };
+
+    this.onEditorClicked = this.onEditorClicked.bind(this);
+  }
+
+  onEditorClicked(e) {
+    if (e.target.className !== "button-checkbox") return;
+
+    // offset is the positioning of the opening [
+    const offset = parseInt(e.target.dataset.offset, 10) + 1;
+
+    const text = this.editor.value;
+    const checked = text[offset] === "x";
+
+    // replace checked value in editor text
+    this.editor.value =
+      text.substr(0, offset) + (checked ? " " : "x") + text.substr(offset + 1);
+
+    this.setState({ highlightedHTML: this.highlightCode(this.editor.value) });
   }
 
   highlightCode(input) {
+    // find all the checkboxes and note their position in the text before manipulation
+    let checkOffsets = [];
+    input.replace(/\[[ x]\] .*?\n/g, function(match, offset) {
+      checkOffsets.push(offset);
+      return match;
+    });
+
     // at the end of the textarea, there will always be an extra space, so
     // we add an extra space here to match it.
-    var codeHighlight = hljs.highlight("markdown", input).value + "\n\n";
+    let codeHighlight = hljs.highlight("markdown", input).value + "\n\n";
+
     // clickable link
     codeHighlight = codeHighlight.replace(
       /(\[.*?\]\((.*?)\))/g,
@@ -58,31 +84,40 @@ class Notepad extends React.Component {
         } else return match;
       }
     );
+
     // strikethrough
     codeHighlight = codeHighlight.replace(
       /~~(.*?)~~/g,
       '<span class="strikethrough">~~$1~~</span>'
     );
+
     // checkable todo list
-    codeHighlight = codeHighlight.replace(
-      /(\[ \] .*?\n)/g,
-      '<span class="marked-list">$1</span>'
-    );
-    codeHighlight = codeHighlight.replace(
-      /(\[x\] .*?\n)/g,
-      '<span class="marked-list checked">$1</span>'
-    );
+    codeHighlight = codeHighlight.replace(/(\[([ x])\]) (.*?\n)/g, function(
+      match,
+      s1,
+      s2,
+      s3,
+      str
+    ) {
+      // use offsets list to describe location
+      return `<span class="marked-list${
+        s2 === "x" ? " checked" : ""
+      }"><span class="button-checkbox" data-offset="${checkOffsets.shift()}">${s1}</span> ${s3}</span>`;
+    });
+
     // tagging
     codeHighlight = codeHighlight.replace(
       /@(?=\S*['-]?)([0-9a-zA-Z'-]+)/g,
       '<span class="inline-tag">@$1</span>'
     );
+
     // priority
     codeHighlight = codeHighlight.replace(
       /!(high|medium|low)/gi,
       (_, priority) =>
         `<span class="inline-priority ${priority.toLowerCase()}">!${priority}</span>`
     );
+
     return codeHighlight;
   }
 
@@ -98,7 +133,7 @@ class Notepad extends React.Component {
     return count + 1;
   }
 
-  syncInputConent(e, element) {
+  syncInputContent(e, element) {
     // sync text
     var textToSync = e.target.value;
     const keyPressed = e.key;
@@ -216,8 +251,8 @@ class Notepad extends React.Component {
       }
     };
 
-    element.addEventListener("input", e => this.syncInputConent(e, element));
-    element.addEventListener("keydown", e => this.syncInputConent(e, element));
+    element.addEventListener("input", e => this.syncInputContent(e, element));
+    element.addEventListener("keydown", e => this.syncInputContent(e, element));
     element.addEventListener("scroll", _ => this.syncScroll(element));
   }
 
@@ -248,6 +283,7 @@ class Notepad extends React.Component {
             ref={ref => (this.editorHighlight = ref)}
             className="highlight-layer"
             dangerouslySetInnerHTML={{ __html: this.state.highlightedHTML }}
+            onClick={this.onEditorClicked}
           />
           <textarea
             className="editor-layer"
